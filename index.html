@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Al-Qur'an Online</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: white;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: white;
+      color: black;
+      padding: 15px;
+      text-align: center;
+    }
+    select {
+      margin: 15px auto;
+      display: block;
+      padding: 10px;
+      width: 80%;
+      font-size: 16px;
+    }
+    .ayat {
+      background: white;
+      margin: 10px auto;
+      padding: 15px;
+      border-radius: 8px;
+      width: 90%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .arabic {
+      font-size: 24px;
+      text-align: right;
+      direction: rtl;
+      color: #111827;
+    }
+    .translation {
+      margin-top: 8px;
+      font-size: 16px;
+      color: #374151;
+    }
+    audio {
+      margin-top: 10px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📖 Al-Qur'an Online</h1>
+  </header>
+
+  <select id="surahSelect">
+    <option value="">Pilih Surah</option>
+  </select>
+
+  <div id="ayatContainer"></div>
+
+  <script>
+    const surahSelect = document.getElementById('surahSelect');
+    const ayatContainer = document.getElementById('ayatContainer');
+
+    // Ambil daftar surah
+    fetch('https://api.alquran.cloud/v1/surah')
+      .then(res => res.json())
+      .then(data => {
+        data.data.forEach(surah => {
+          const opt = document.createElement('option');
+          opt.value = surah.number;
+          opt.textContent = `${surah.number}. ${surah.englishName} (${surah.name})`;
+          surahSelect.appendChild(opt);
+        });
+      });
+
+    // Saat user pilih surah
+    surahSelect.addEventListener('change', () => {
+      const surahNum = surahSelect.value;
+      if (!surahNum) return;
+      ayatContainer.innerHTML = '<p>⏳ Memuat ayat...</p>';
+
+      fetch(`https://api.alquran.cloud/v1/surah/${surahNum}/ar.alafasy`)
+        .then(res => res.json())
+        .then(data => {
+          ayatContainer.innerHTML = '';
+          data.data.ayahs.forEach(ayah => {
+            const div = document.createElement('div');
+            div.className = 'ayat';
+            div.innerHTML = `
+              <div class="arabic">${ayah.text}</div>
+              <div class="translation">Ayat ${ayah.numberInSurah}</div>
+              <audio controls src="${ayah.audio}"></audio>
+            `;
+            ayatContainer.appendChild(div);
+          });
+        });
+    });
+  </script>
+</body>
+</html>
